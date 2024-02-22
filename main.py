@@ -94,13 +94,23 @@ def main():
                         db_actions.update_quest_id(user_id, topic_id)
                     bot.forward_message(chat_id=group_id, from_chat_id=message.chat.id, message_id=message.id,
                                         message_thread_id=topic_id)
-                    temp_user_data.temp_data(user_id)[user_id][0] = 3
+                    db_actions.update_question_status(user_id, True)
                 else:
                     bot.send_message(message.chat.id, 'Это не текст')
-            elif user_current_action == 3:
-                pass  # здесь будут приходить сообщения от пользователя когда он общается с модератором
-        elif message.chat.id == group_id:
-            print(message) # здесь то что написал админ
+            elif db_actions.get_question_status_user_id(user_id):
+                client_id = db_actions.user_id_from_question_id(user_id)
+                bot.forward_message(chat_id=group_id, from_chat_id=message.chat.id, message_id=message.id,
+                                    message_thread_id=client_id)
+        elif user_id == group_id:
+            topic_id = message.reply_to_message.id
+            client_id = db_actions.get_question_id(topic_id)
+            question_status = db_actions.get_question_status(topic_id)
+            if client_id is not None and question_status:
+                if user_input is not None:
+                    bot.send_message(chat_id=client_id,
+                                     text=user_input)
+                elif photo is not None:
+                    pass  # здесь можно добавить отправку фото от модера к клиенту
         else:
             bot.send_message(user_id, 'Введите /start для запуска бота')
 
@@ -111,6 +121,7 @@ def main():
             buttons = Bot_inline_btns()
             if call.data == 'take_gift':
                 if not db_actions.bonus_already_get(user_id):
+                    db_actions.update_question_status(user_id, False)
                     bot.send_message(call.message.chat.id,
                                      'Для получения подарка:\n1.Нажмите кнопку: "Поделиться контактом"',
                                      reply_markup=buttons.share_number_btn())
