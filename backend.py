@@ -3,11 +3,9 @@
 #                SBR                #
 #               zzsxd               #
 #####################################
-import base64
 from openpyxl import load_workbook
 from openpyxl.drawing.image import Image
 import pandas as pd
-import csv
 #####################################
 
 
@@ -33,6 +31,28 @@ class DbAct:
     def save_photo(self, byte_row, name):
         with open(name, 'wb') as photo:
             photo.write(byte_row)
+
+    def add_user(self, user_id, first_name, last_name):
+        self.__db.db_write('INSERT OR IGNORE INTO users (user_id, first_name, last_name, have_bonus) VALUES (?, ?, ?, ?)', (user_id, first_name, last_name, False))
+
+    def user_is_existed(self, user_id):
+        data = self.__db.db_read('SELECT count(*) FROM users WHERE user_id = ?', (user_id, ))
+        if len(data) > 0:
+            if data[0][0] > 0:
+                status = True
+            else:
+                status = False
+            return status
+
+    def bonus_already_get(self, user_id):
+        data = self.__db.db_read('SELECT have_bonus FROM users WHERE user_id = ?', (user_id, ))
+        print(data)
+        if len(data) > 0:
+            if data[0][0] == 1:
+                status = True
+            else:
+                status = False
+            return status
 
     def insert_images_to_excel(self, image_paths, excel_filename):
         counter = -3
@@ -66,13 +86,7 @@ class DbAct:
             df.to_excel(self.__dump_path_xlsx, sheet_name='пользователи', index=False)
             self.insert_images_to_excel(photos, self.__dump_path_xlsx)
 
-    def add_review(self, data):
-        max_id = self.__db.db_read('SELECT MAX(row_id) FROM users', ())
-        print(max_id)
-        if max_id[0][0] != None:
-            new_entry = int(max_id[0][0]) + 1
-        else:
-            new_entry = 1
-        self.__db.db_write(f'INSERT INTO users (phonenumber, articul, name, photo) VALUES (?, ?, ?, ?)',
-                                         (data[0], data[1], data[2], new_entry))
-        self.save_photo(data[3], f'{self.__img_folder_path}/{new_entry}.png')
+    def add_review(self, user_id, data):
+        row_id = int(self.__db.db_read('SELECT row_id FROM users WHERE user_id = ?', (user_id, ))[0][0])
+        self.__db.db_write('UPDATE users SET photo_review = ?, phone_number = ?, have_bonus = ? WHERE user_id = ?', (row_id, data[0], True, user_id))
+        self.save_photo(data[1], f'{self.__img_folder_path}/{row_id}.png')

@@ -25,10 +25,15 @@ class DB:
             self.__cursor.execute('''
             CREATE TABLE users(
             row_id INTEGER primary key autoincrement not null,
-            phonenumber TEXT,
-            articul TEXT,
-            name TEXT,
-            photo INTEGER
+            user_id INTEGER,
+            topic_question_id INTEGER,
+            topic_review_id INTEGER,
+            photo_review INTEGER,
+            first_name TEXT,
+            last_name TEXT,
+            phone_number TEXT,
+            have_bonus BOOL,
+            UNIQUE(user_id)
             )
             ''')
             self.__db.commit()
