@@ -33,7 +33,8 @@ class DbAct:
             photo.write(byte_row)
 
     def add_user(self, user_id, first_name, last_name):
-        self.__db.db_write('INSERT OR IGNORE INTO users (user_id, first_name, last_name, have_bonus) VALUES (?, ?, ?, ?)', (user_id, first_name, last_name, False))
+        if not self.user_is_existed(user_id):
+            self.__db.db_write('INSERT INTO users (user_id, first_name, last_name, have_bonus) VALUES (?, ?, ?, ?)', (user_id, first_name, last_name, False))
 
     def user_is_existed(self, user_id):
         data = self.__db.db_read('SELECT count(*) FROM users WHERE user_id = ?', (user_id, ))
@@ -53,6 +54,22 @@ class DbAct:
             else:
                 status = False
             return status
+
+    def update_quest_id(self, user_id, topic_question_id):
+        self.__db.db_write('UPDATE users SET topic_question_id = ? WHERE user_id = ?', (topic_question_id, user_id))
+
+    def update_review_id(self, user_id, topic_review_id):
+        self.__db.db_write('UPDATE users SET topic_review_id = ? WHERE user_id = ?', (topic_review_id, user_id))
+
+    def get_quest_id(self, user_id):
+        data = self.__db.db_read('SELECT topic_question_id FROM users WHERE user_id = ?', (user_id, ))
+        if len(data) > 0:
+            return data[0][0]
+
+    def get_review_id(self, user_id):
+        data = self.__db.db_read('SELECT topic_review_id FROM users WHERE user_id = ?', (user_id, ))
+        if len(data) > 0:
+            return data[0][0]
 
     def insert_images_to_excel(self, image_paths, excel_filename):
         counter = -3

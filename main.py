@@ -62,17 +62,22 @@ def main():
                                                                   name=f'{message.from_user.first_name} {message.from_user.last_name} ОТЗЫВ',
                                                                   icon_color=0x6FB9F0).message_thread_id
                     bot.forward_message(chat_id=group_id, from_chat_id=user_id, message_id=message.id, message_thread_id=topic_id)
+                    db_actions.update_review_id(user_id, topic_id)
                     bot.send_message(message.chat.id, 'Проверка информации...')
                 else:
                     bot.send_message(message.chat.id, 'Это не фото')
             elif user_current_action == 2:
                 if user_input is not None:
                     bot.send_message(message.chat.id, 'Заявка принята! Ожидайте...')
-                    topic_id = telebot.TeleBot.create_forum_topic(bot, chat_id=group_id,
-                                                       name=f'{message.from_user.first_name} {message.from_user.last_name} ПРОБЛЕМА С ТОВАРОМ',
-                                                       icon_color=0x6FB9F0,
-                                                       icon_custom_emoji_id='T').message_thread_id
-                    bot.forward_message(chat_id=group_id, from_chat_id=message.chat.id, message_id=message.id, message_thread_id=topic_id)
+                    topic_id = db_actions.get_quest_id(user_id)
+                    if topic_id is None:
+                        topic_id = telebot.TeleBot.create_forum_topic(bot, chat_id=group_id,
+                                                           name=f'{message.from_user.first_name} {message.from_user.last_name} ПРОБЛЕМА С ТОВАРОМ',
+                                                           icon_color=0x6FB9F0,
+                                                           icon_custom_emoji_id='T').message_thread_id
+                        db_actions.update_quest_id(user_id, topic_id)
+                    bot.forward_message(chat_id=group_id, from_chat_id=message.chat.id, message_id=message.id,
+                                        message_thread_id=topic_id)
                     temp_user_data.temp_data(user_id)[user_id][0] = 3
                 else:
                     bot.send_message(message.chat.id, 'Это не текст')
@@ -128,3 +133,6 @@ if '__main__' == __name__:
     db = DB(db_name, Lock())
     db_actions = DbAct(db, xlsx_path, image_folder)
     main()
+
+# получить id топика с ВОПРОСОМ для конкретного пользователя db_actions.get_quest_id(user_id)
+# получить id топика с ПОДАРКОМ для конкретного пользователя db_actions.get_review_id(user_id)
