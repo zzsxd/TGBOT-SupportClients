@@ -17,13 +17,15 @@ db_name = 'db.sqlite3'
 xlsx_path = 'dump.xlsx'
 image_folder = 'photos'
 bot = telebot.TeleBot(tg_api)
+
+
 ####################################################################
 
 
 def main():
     @bot.message_handler(commands=['start'])
     def start_msg(message):
-        #print(f'{message.from_user.first_name}, {message.from_user.last_name}')  # имя фамилия пользователя
+        # print(f'{message.from_user.first_name}, {message.from_user.last_name}')  # имя фамилия пользователя
         user_id = message.chat.id
         db_actions.add_user(user_id, message.from_user.first_name, message.from_user.last_name)
         buttons = Bot_inline_btns()
@@ -45,13 +47,19 @@ def main():
             user_current_action = temp_user_data.temp_data(user_id)[user_id][0]
             if user_current_action == 0:
                 if contact is not None:
+                    contact_forward_id = message.id
                     temp_user_data.temp_data(user_id)[user_id][1] = contact.phone_number
-                    bot.send_message(message.chat.id, 'Отправьте фото отзыва')
+                    bot.send_message(message.chat.id, '2. Отправьте фото отзыва',
+                                     reply_markup=telebot.types.ReplyKeyboardRemove())
+                    temp_user_data.temp_data(message.chat.id)[message.chat.id][3][0] = contact_forward_id
                     temp_user_data.temp_data(message.chat.id)[message.chat.id][0] = 1
                 else:
                     bot.send_message(message.chat.id, 'Это не контакт')
             elif user_current_action == 1:
                 if photo is not None:
+                    buttons = Bot_inline_btns()
+                    photo_forward_id = message.id
+                    temp_user_data.temp_data(message.chat.id)[message.chat.id][3][1] = photo_forward_id
                     photo_id = photo[-1].file_id
                     photo_file = bot.get_file(photo_id)
                     photo_bytes = bot.download_file(photo_file.file_path)
@@ -59,11 +67,17 @@ def main():
                     db_actions.add_review(user_id, temp_user_data.temp_data(user_id)[user_id][1:3])
                     temp_user_data.temp_data(message.chat.id)[message.chat.id][0] = None
                     topic_id = telebot.TeleBot.create_forum_topic(bot, chat_id=group_id,
-                                                                  name=f'{message.from_user.first_name} {message.from_user.last_name} ОТЗЫВ',
+                                                                  name=f'{message.from_user.first_name} '
+                                                                       f'{message.from_user.last_name} ОТЗЫВ',
                                                                   icon_color=0x6FB9F0).message_thread_id
-                    bot.forward_message(chat_id=group_id, from_chat_id=user_id, message_id=message.id, message_thread_id=topic_id)
+                    bot.forward_messages(chat_id=group_id, from_chat_id=user_id,
+                                         message_ids=temp_user_data.temp_data(message.chat.id)[message.chat.id][3],
+                                         message_thread_id=topic_id)
                     db_actions.update_review_id(user_id, topic_id)
                     bot.send_message(message.chat.id, 'Проверка информации...')
+                    bot.send_message(chat_id=group_id, message_thread_id=topic_id, text='Получен отзыв!'
+                                                                                        ' Выберите действие!',
+                                     reply_markup=buttons.review_manager_btns())
                 else:
                     bot.send_message(message.chat.id, 'Это не фото')
             elif user_current_action == 2:
@@ -72,9 +86,11 @@ def main():
                     topic_id = db_actions.get_quest_id(user_id)
                     if topic_id is None:
                         topic_id = telebot.TeleBot.create_forum_topic(bot, chat_id=group_id,
-                                                           name=f'{message.from_user.first_name} {message.from_user.last_name} ПРОБЛЕМА С ТОВАРОМ',
-                                                           icon_color=0x6FB9F0,
-                                                           icon_custom_emoji_id='T').message_thread_id
+                                                                      name=f'{message.from_user.first_name} '
+                                                                           f'{message.from_user.last_name} ПРОБЛЕМА С '
+                                                                           f'ТОВАРОМ',
+                                                                      icon_color=0x6FB9F0,
+                                                                      icon_custom_emoji_id='T').message_thread_id
                         db_actions.update_quest_id(user_id, topic_id)
                     bot.forward_message(chat_id=group_id, from_chat_id=message.chat.id, message_id=message.id,
                                         message_thread_id=topic_id)
@@ -82,7 +98,9 @@ def main():
                 else:
                     bot.send_message(message.chat.id, 'Это не текст')
             elif user_current_action == 3:
-                pass #здесь будут приходить сообщения от пользователя когда он общается с модератором
+                pass  # здесь будут приходить сообщения от пользователя когда он общается с модератором
+        elif message.chat.id == group_id:
+            print(message) # здесь то что написал админ
         else:
             bot.send_message(user_id, 'Введите /start для запуска бота')
 
@@ -106,10 +124,18 @@ def main():
             elif call.data in ['another_question', 'complectation_product', 'quality_product']:
                 if call.message and call.message.chat:
                     bot.send_message(call.message.chat.id, 'Пожалуйста, подробно опишите проблему!\n'
-                                                           'Так же по возможности приложите фотографии, демонстрирующие '
-                                                           'проблему.\n'
+                                                           'Так же по возможности приложите фотографии, демонстрирующие'
+                                                           ' проблему.\n'
                                                            'Мы ответим в течении 24 часов!')
                     temp_user_data.temp_data(call.message.chat.id)[call.message.chat.id][0] = 2
+        elif call.message.chat.id == group_id:
+            if call.data == 'give_bonus':
+                print(db_actions.get_user_id_from_topic(call.message.reply_to_message.id))
+                bot.send_message(chat_id=db_actions.get_user_id_from_topic(call.message.reply_to_message.id),
+                                 text='Вы успешно получили бонус!')
+            elif call.data == 'not_give_bonus':
+                bot.send_message(chat_id=db_actions.get_user_id_from_topic(call.message.reply_to_message.id),
+                                 text='К сожалению, мы не можем выдать вам бонус.')
         else:
             bot.send_message(user_id, 'Введите /start для запуска бота')
 

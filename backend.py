@@ -16,7 +16,7 @@ class TempUserData:
 
     def temp_data(self, user_id):
         if user_id not in self.__user_data.keys():
-            self.__user_data.update({user_id: [None, None, None, None, None]})
+            self.__user_data.update({user_id: [None, None, None, [None, None], None]})
         return self.__user_data
 
 
@@ -31,6 +31,12 @@ class DbAct:
     def save_photo(self, byte_row, name):
         with open(name, 'wb') as photo:
             photo.write(byte_row)
+
+    def get_user_id_from_topic(self, topic_id):
+        data = self.__db.db_read("SELECT user_id FROM users WHERE topic_review_id = ?", (topic_id, ))
+        if len(data) > 0:
+            return data[0][0]
+
 
     def add_user(self, user_id, first_name, last_name):
         if not self.user_is_existed(user_id):

@@ -28,7 +28,14 @@ class Bot_inline_btns:
         return self.__markup
 
     def share_number_btn(self):
-        keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
         button = types.KeyboardButton(text="Поделиться контактом", request_contact=True)
+
         keyboard.add(button)
         return keyboard
+
+    def review_manager_btns(self):
+        all_good = types.InlineKeyboardButton('Выдать бонус!', callback_data='give_bonus')
+        not_good = types.InlineKeyboardButton('Отклонить выдачу бонус!', callback_data='not_give_bonus')
+        self.__markup.add(all_good, not_good)
+        return self.__markup
