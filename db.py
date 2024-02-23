@@ -31,10 +31,19 @@ class DB:
             photo_review INTEGER,
             first_name TEXT,
             last_name TEXT,
+            nick_name TEXT,
             phone_number TEXT,
             have_bonus BOOL,
             question_open BOOL,
             UNIQUE(user_id)
+            )
+            ''')
+            self.__cursor.execute('''
+            CREATE TABLE actions(
+            row_id INTEGER primary key autoincrement not null,
+            time INTEGER,
+            nick_tg INTEGER,
+            request_type INTEGER
             )
             ''')
             self.__db.commit()

@@ -14,11 +14,9 @@ from backend import TempUserData, DbAct
 tg_api = '6667593230:AAH2ZgrEVgdE4DEt49ksZ-qD1ThJkEXIPag'
 group_id = -1002003996301
 db_name = 'db.sqlite3'
-xlsx_path = 'dump.xlsx'
-image_folder = 'photos'
+#xlsx_path = 'dump.xlsx'
+#image_folder = 'photos'
 bot = telebot.TeleBot(tg_api)
-
-
 ####################################################################
 
 
@@ -27,7 +25,7 @@ def main():
     def start_msg(message):
         # print(f'{message.from_user.first_name}, {message.from_user.last_name}')  # имя фамилия пользователя
         user_id = message.chat.id
-        db_actions.add_user(user_id, message.from_user.first_name, message.from_user.last_name)
+        db_actions.add_user(user_id, message.from_user.first_name, message.from_user.last_name, f'@{message.from_user.username}')
         buttons = Bot_inline_btns()
         bot.send_message(message.chat.id, 'Привет!👋\n'
                                           'Благодарим за покупку🖤\n'
@@ -75,18 +73,18 @@ def main():
                                          message_ids=temp_user_data.temp_data(message.chat.id)[message.chat.id][3],
                                          message_thread_id=topic_id)
                     db_actions.update_review_id(user_id, topic_id)
-                    bot.send_message(message.chat.id, 'Проверка информации...')
                     bot.send_message(chat_id=group_id, message_thread_id=topic_id, text='Получен отзыв!✅\n'
                                                                                         'Проверьте информацию и '
                                                                                         'отправьте вознаграждение на '
                                                                                         f'номер телефона: '
                                                                                         f'{temp_user_data.temp_data(message.chat.id)[message.chat.id][1]}',
                                      reply_markup=buttons.review_manager_btns())
+                    db_actions.add_action(user_id, 1)
+                    bot.send_message(message.chat.id, 'Проверка информации...')
                 else:
                     bot.send_message(message.chat.id, '❌Это не фото❌')
             elif user_current_action == 2:
                 if user_input is not None:
-                    bot.send_message(message.chat.id, 'Заявка принята! Ожидайте...')
                     topic_id = db_actions.get_quest_id(user_id)
                     if topic_id is None:
                         topic_id = telebot.TeleBot.create_forum_topic(bot, chat_id=group_id,
@@ -103,12 +101,15 @@ def main():
                                         message_thread_id=topic_id)
                     db_actions.update_question_status(user_id, True)
                     temp_user_data.temp_data(message.chat.id)[message.chat.id][0] = None
+                    db_actions.add_action(user_id, 0)
+                    bot.send_message(message.chat.id, 'Заявка принята! Ожидайте...')
                 else:
                     bot.send_message(message.chat.id, '❌Это не текст❌')
             elif db_actions.get_question_status_user_id(user_id):
                 client_id = db_actions.user_id_from_question_id(user_id)
                 bot.forward_message(chat_id=group_id, from_chat_id=message.chat.id, message_id=message.id,
                                     message_thread_id=client_id)
+                db_actions.add_action(user_id, 2)
         elif user_id == group_id:
             topic_id = message.reply_to_message.id
             client_id = db_actions.get_question_id(topic_id)
@@ -119,6 +120,7 @@ def main():
                                      text=user_input)
                 elif photo is not None:
                     pass  # здесь можно добавить отправку фото от модера к клиенту
+                db_actions.add_action(client_id, 3)
         else:
             bot.send_message(user_id, 'Введите /start для запуска бота')
 
@@ -183,11 +185,11 @@ def main():
 
 
 if '__main__' == __name__:
-    if not os.path.exists(image_folder):
-        os.mkdir(image_folder)
+    #if not os.path.exists(image_folder):
+        #os.mkdir(image_folder)
     temp_user_data = TempUserData()
     db = DB(db_name, Lock())
-    db_actions = DbAct(db, xlsx_path, image_folder)
+    db_actions = DbAct(db)
     main()
 
 # получить id топика с ВОПРОСОМ для конкретного пользователя db_actions.get_quest_id(user_id)

@@ -8,9 +8,8 @@ scopes = [
 
 
 creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json')
-
 file = gspread.authorize(creds)
-workbook = file.open("test")
+workbook = file.open("события бота")
 sheet = workbook.sheet1
 for cell in sheet.range('A1:C3'):
     print(cell.value)
