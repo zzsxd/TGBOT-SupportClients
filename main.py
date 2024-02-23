@@ -102,6 +102,7 @@ def main():
                     bot.forward_message(chat_id=group_id, from_chat_id=message.chat.id, message_id=message.id,
                                         message_thread_id=topic_id)
                     db_actions.update_question_status(user_id, True)
+                    temp_user_data.temp_data(message.chat.id)[message.chat.id][0] = None
                 else:
                     bot.send_message(message.chat.id, '❌Это не текст❌')
             elif db_actions.get_question_status_user_id(user_id):
@@ -124,8 +125,8 @@ def main():
     @bot.callback_query_handler(func=lambda call: True)
     def callback(call):
         user_id = call.message.chat.id
+        buttons = Bot_inline_btns()
         if db_actions.user_is_existed(user_id):
-            buttons = Bot_inline_btns()
             if call.data == 'take_gift':
                 if not db_actions.bonus_already_get(user_id):
                     db_actions.update_question_status(user_id, False)
@@ -148,17 +149,23 @@ def main():
                     temp_user_data.temp_data(call.message.chat.id)[call.message.chat.id][0] = 2
         elif call.message.chat.id == group_id:
             if call.data == 'give_bonus':
-                print(db_actions.get_user_id_from_topic(call.message.reply_to_message.id))
                 bot.send_message(chat_id=db_actions.get_user_id_from_topic(call.message.reply_to_message.id),
                                  text='Вы успешно получили бонус✅\n'
-                                      f'Бонус отправлен вам на данный номер телефона: {temp_user_data.temp_data(call.message.chat.id)[call.message.chat.id][1]}')
+                                      f'Бонус отправлен вам на данный номер телефона: {db_actions.get_phone_numer_from_topic(call.message.reply_to_message.id)}')
             elif call.data == 'not_give_bonus':
                 bot.send_message(chat_id=db_actions.get_user_id_from_topic(call.message.reply_to_message.id),
                                  text='К сожалению, мы не можем выдать вам бонус❌')
             elif call.data == 'problem_sloved':
-                bot.send_message(chat_id=db_actions.get_user_id_from_topic(call.message.reply_to_message.id),
-                                 text='Ваша проблема была решена!\n'
-                                      'Можете отправить ваш отзыв нам✅')
+                topic_id = call.message.reply_to_message.id
+                client_id = db_actions.get_question_id(topic_id)
+                if not db_actions.bonus_already_get(client_id):
+                    db_actions.update_question_status(client_id, False)
+                    bot.send_message(chat_id=client_id,
+                                     text='Ваша проблема была решена!\n'
+                                          'Можете отправить ваш отзыв нам✅', reply_markup=buttons.share_number_btn())
+                    temp_user_data.temp_data(client_id)[client_id][0] = 0
+                else:
+                    bot.send_message(chat_id=group_id, message_thread_id=topic_id, text='Вы уже запрашивали бонус✅')
         else:
             bot.send_message(user_id, 'Введите /start для запуска бота')
 
