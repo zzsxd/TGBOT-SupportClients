@@ -49,12 +49,12 @@ def main():
                 if contact is not None:
                     contact_forward_id = message.id
                     temp_user_data.temp_data(user_id)[user_id][1] = contact.phone_number
-                    bot.send_message(message.chat.id, '2. Отправьте фото отзыва',
+                    bot.send_message(message.chat.id, '2. Отправьте фото отзыва📷',
                                      reply_markup=telebot.types.ReplyKeyboardRemove())
                     temp_user_data.temp_data(message.chat.id)[message.chat.id][3][0] = contact_forward_id
                     temp_user_data.temp_data(message.chat.id)[message.chat.id][0] = 1
                 else:
-                    bot.send_message(message.chat.id, 'Это не контакт')
+                    bot.send_message(message.chat.id, '❌Это не контакт❌')
             elif user_current_action == 1:
                 if photo is not None:
                     buttons = Bot_inline_btns()
@@ -75,11 +75,14 @@ def main():
                                          message_thread_id=topic_id)
                     db_actions.update_review_id(user_id, topic_id)
                     bot.send_message(message.chat.id, 'Проверка информации...')
-                    bot.send_message(chat_id=group_id, message_thread_id=topic_id, text='Получен отзыв!'
-                                                                                        ' Выберите действие!',
+                    bot.send_message(chat_id=group_id, message_thread_id=topic_id, text='Получен отзыв!✅\n'
+                                                                                        'Проверьте информацию и '
+                                                                                        'отправьте вознаграждение на '
+                                                                                        f'номер телефона: '
+                                                                                        f'{temp_user_data.temp_data(message.chat.id)[message.chat.id][1]}',
                                      reply_markup=buttons.review_manager_btns())
                 else:
-                    bot.send_message(message.chat.id, 'Это не фото')
+                    bot.send_message(message.chat.id, '❌Это не фото❌')
             elif user_current_action == 2:
                 if user_input is not None:
                     bot.send_message(message.chat.id, 'Заявка принята! Ожидайте...')
@@ -96,7 +99,7 @@ def main():
                                         message_thread_id=topic_id)
                     db_actions.update_question_status(user_id, True)
                 else:
-                    bot.send_message(message.chat.id, 'Это не текст')
+                    bot.send_message(message.chat.id, '❌Это не текст❌')
             elif db_actions.get_question_status_user_id(user_id):
                 client_id = db_actions.user_id_from_question_id(user_id)
                 bot.forward_message(chat_id=group_id, from_chat_id=message.chat.id, message_id=message.id,
@@ -123,12 +126,12 @@ def main():
                 if not db_actions.bonus_already_get(user_id):
                     db_actions.update_question_status(user_id, False)
                     bot.send_message(call.message.chat.id,
-                                     'Для получения подарка:\n1.Нажмите кнопку: "Поделиться контактом"',
+                                     'Для получения подарка:🎁\n1.Нажмите кнопку: "Поделиться контактом👤"',
                                      reply_markup=buttons.share_number_btn())
 
                     temp_user_data.temp_data(call.message.chat.id)[call.message.chat.id][0] = 0
                 else:
-                    bot.send_message(user_id, 'Вы уже получали бонус')
+                    bot.send_message(user_id, 'Вы уже получали бонус✅')
             elif call.data == 'write_manager':
                 bot.send_message(call.message.chat.id, 'Выберите пожалуйста категорию обращения!',
                                  reply_markup=buttons.write_manager_btns())
@@ -143,10 +146,11 @@ def main():
             if call.data == 'give_bonus':
                 print(db_actions.get_user_id_from_topic(call.message.reply_to_message.id))
                 bot.send_message(chat_id=db_actions.get_user_id_from_topic(call.message.reply_to_message.id),
-                                 text='Вы успешно получили бонус!')
+                                 text='Вы успешно получили бонус✅\n'
+                                      f'Бонус отправлен вам на данный номер телефона: {temp_user_data.temp_data(call.message.chat.id)[call.message.chat.id][1]}')
             elif call.data == 'not_give_bonus':
                 bot.send_message(chat_id=db_actions.get_user_id_from_topic(call.message.reply_to_message.id),
-                                 text='К сожалению, мы не можем выдать вам бонус.')
+                                 text='К сожалению, мы не можем выдать вам бонус❌')
         else:
             bot.send_message(user_id, 'Введите /start для запуска бота')
 
