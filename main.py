@@ -39,6 +39,7 @@ def main():
 
     @bot.message_handler(content_types=['text', 'photo', 'contact'])
     def text(message):
+        buttons = Bot_inline_btns()
         user_input = message.text
         user_id = message.chat.id
         contact = message.contact
@@ -95,6 +96,9 @@ def main():
                                                                       icon_color=0x6FB9F0,
                                                                       icon_custom_emoji_id='T').message_thread_id
                         db_actions.update_quest_id(user_id, topic_id)
+                        bot.send_message(chat_id=group_id, message_thread_id=topic_id, text='Проблема с товаром!\n'
+                                                                                            'Проверьте информацию и '
+                                                                                            'ответьте на проблему пользователя', reply_markup=buttons.give_review_btns())
                     bot.forward_message(chat_id=group_id, from_chat_id=message.chat.id, message_id=message.id,
                                         message_thread_id=topic_id)
                     db_actions.update_question_status(user_id, True)
@@ -151,6 +155,10 @@ def main():
             elif call.data == 'not_give_bonus':
                 bot.send_message(chat_id=db_actions.get_user_id_from_topic(call.message.reply_to_message.id),
                                  text='К сожалению, мы не можем выдать вам бонус❌')
+            elif call.data == 'problem_sloved':
+                bot.send_message(chat_id=db_actions.get_user_id_from_topic(call.message.reply_to_message.id),
+                                 text='Ваша проблема была решена!\n'
+                                      'Можете отправить ваш отзыв нам✅')
         else:
             bot.send_message(user_id, 'Введите /start для запуска бота')
 

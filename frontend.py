@@ -39,3 +39,8 @@ class Bot_inline_btns:
         not_good = types.InlineKeyboardButton('Отклонить выдачу бонуса❌', callback_data='not_give_bonus')
         self.__markup.add(all_good, not_good)
         return self.__markup
+
+    def give_review_btns(self):
+        problem_sloved = types.InlineKeyboardButton('Проблема решена, запросить отзыв✅', callback_data='problem_sloved')
+        self.__markup.add(problem_sloved)
+        return self.__markup
