@@ -11,11 +11,12 @@ from frontend import Bot_inline_btns
 from backend import TempUserData, DbAct
 
 ####################################################################
+work_dir = '/root/WildberriesTGBot-master/'
 tg_api = '6667593230:AAH2ZgrEVgdE4DEt49ksZ-qD1ThJkEXIPag'
 group_id = -1002003996301
-db_name = 'db.sqlite3'
-#xlsx_path = 'dump.xlsx'
-#image_folder = 'photos'
+db_name = work_dir + 'db.sqlite3'
+#xlsx_path = work_dir + 'dump.xlsx'
+#image_folder = work_dir + 'photos'
 bot = telebot.TeleBot(tg_api)
 ####################################################################
 
