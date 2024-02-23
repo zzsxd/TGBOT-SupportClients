@@ -33,6 +33,7 @@ class DB:
             last_name TEXT,
             phone_number TEXT,
             have_bonus BOOL,
+            question_open BOOL,
             UNIQUE(user_id)
             )
             ''')
