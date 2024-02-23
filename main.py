@@ -11,7 +11,7 @@ from frontend import Bot_inline_btns
 from backend import TempUserData, DbAct
 
 ####################################################################
-work_dir = '/root/WildberriesTGBot-master/'
+work_dir = '/root/wilberriesbotv2/'
 tg_api = '6667593230:AAH2ZgrEVgdE4DEt49ksZ-qD1ThJkEXIPag'
 group_id = -1002003996301
 db_name = work_dir + 'db.sqlite3'
@@ -85,27 +85,25 @@ def main():
                 else:
                     bot.send_message(message.chat.id, '❌Это не фото❌')
             elif user_current_action == 2:
-                if user_input is not None:
-                    topic_id = db_actions.get_quest_id(user_id)
-                    if topic_id is None:
-                        topic_id = telebot.TeleBot.create_forum_topic(bot, chat_id=group_id,
-                                                                      name=f'{message.from_user.first_name} '
-                                                                           f'{message.from_user.last_name} ПРОБЛЕМА С '
-                                                                           f'ТОВАРОМ',
-                                                                      icon_color=0x6FB9F0,
-                                                                      icon_custom_emoji_id='T').message_thread_id
-                        db_actions.update_quest_id(user_id, topic_id)
-                        bot.send_message(chat_id=group_id, message_thread_id=topic_id, text='Проблема с товаром!\n'
-                                                                                            'Проверьте информацию и '
-                                                                                            'ответьте на проблему пользователя', reply_markup=buttons.give_review_btns())
-                    bot.forward_message(chat_id=group_id, from_chat_id=message.chat.id, message_id=message.id,
-                                        message_thread_id=topic_id)
-                    db_actions.update_question_status(user_id, True)
-                    temp_user_data.temp_data(message.chat.id)[message.chat.id][0] = None
-                    db_actions.add_action(user_id, 0)
-                    bot.send_message(message.chat.id, 'Заявка принята! Ожидайте...')
-                else:
-                    bot.send_message(message.chat.id, '❌Это не текст❌')
+                topic_id = db_actions.get_quest_id(user_id)
+                if topic_id is None:
+                    topic_id = telebot.TeleBot.create_forum_topic(bot, chat_id=group_id,
+                                                                  name=f'{message.from_user.first_name} '
+                                                                       f'{message.from_user.last_name} ПРОБЛЕМА С '
+                                                                       f'ТОВАРОМ',
+                                                                  icon_color=0x6FB9F0,
+                                                                  icon_custom_emoji_id='T').message_thread_id
+                    db_actions.update_quest_id(user_id, topic_id)
+                    bot.send_message(chat_id=group_id, message_thread_id=topic_id, text='Проблема с товаром!\n'
+                                                                                        'Проверьте информацию и '
+                                                                                        'ответьте на проблему пользователя',
+                                     reply_markup=buttons.give_review_btns())
+                bot.forward_message(chat_id=group_id, from_chat_id=message.chat.id, message_id=message.id,
+                                    message_thread_id=topic_id)
+                db_actions.update_question_status(user_id, True)
+                temp_user_data.temp_data(message.chat.id)[message.chat.id][0] = None
+                db_actions.add_action(user_id, 0)
+                bot.send_message(message.chat.id, 'Заявка принята! Ожидайте...')
             elif db_actions.get_question_status_user_id(user_id):
                 client_id = db_actions.user_id_from_question_id(user_id)
                 bot.forward_message(chat_id=group_id, from_chat_id=message.chat.id, message_id=message.id,
