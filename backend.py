@@ -98,6 +98,11 @@ class DbAct:
         if len(data) > 0:
             return data[0][0]
 
+    def get_phone_numer_from_topic(self, topic_id):
+        data = self.__db.db_read('SELECT phone_number FROM users WHERE topic_review_id = ?', (topic_id, ))
+        if len(data) > 0:
+            return data[0][0]
+
     def get_question_id(self, topic_id):
         data = self.__db.db_read('SELECT user_id FROM users WHERE topic_question_id = ?', (topic_id, ))
         if len(data) > 0:
