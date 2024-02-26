@@ -16,7 +16,7 @@ class Bot_inline_btns:
 
     def start_btns(self):
         gift = types.InlineKeyboardButton('Получить подарок🎁', callback_data='take_gift')
-        write = types.InlineKeyboardButton('Написать продавцу✍️', callback_data='write_manager')
+        write = types.InlineKeyboardButton('Написать продавцу✍🏼', callback_data='write_manager')
         self.__markup.add(gift, write)
         return self.__markup
 
@@ -43,4 +43,9 @@ class Bot_inline_btns:
     def give_review_btns(self):
         problem_sloved = types.InlineKeyboardButton('Проблема решена, запросить отзыв✅', callback_data='problem_sloved')
         self.__markup.add(problem_sloved)
+        return self.__markup
+    def all_good_btns(self):
+        ok = types.InlineKeyboardButton('Все верно👍🏽', callback_data='all_good')
+        not_ok = types.InlineKeyboardButton('Перепишу❌', callback_data='not_good')
+        self.__markup.add(ok, not_ok)
         return self.__markup
